@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.teamplus.mvc.dao.MyNoteMapper">
+
+    <!-- 노트 번호 시퀀스 -->
+    <select id="getMynoteSequence" resultType="int">
+        SELECT CASE WHEN MAX(noteNo) is null THEN 1
+                    ELSE MAX(noteNo)
+                   END AS noteNo
+        FROM MYNOTE
+    </select>
+
+    <!-- 노트 글 작성 -->
+    <insert id="write" parameterType="MyNoteDTO">
+        INSERT INTO
+            myNote
+        VALUES (#{userNo},#{noteNo},#{noteDate},#{title},#{content},#{password},'비공개')
+    </insert>
+
+    <!-- 사용자 + 날짜 지정 노트 글 리스트 [출력] -->
+    <select id="selectList" parameterType="String" resultType="MyNoteDTO">
+        SELECT *
+        FROM myNote
+        WHERE userNo=#{userNo}
+        order by noteNo
+    </select>
+
+    <!--<select id="selectList" parameterType="java.util.Map" resultType="MyNoteDTO">
+        SELECT * FROM
+        (SELECT rownum r ,f.* FROM
+        (SELECT * FROM myNote
+        WHERE userNo=#{userNo}
+        and <include refid="search" />
+        ORDER BY noteNo DESC) f)
+        WHERE r BETWEEN #{start} AND #{end}
+
+    </select>
+
+    <select id="getCount" resultType="long">
+        select count(*) from myNote
+        WHERE userNo=#{userNo}
+        AND <include refid="search"></include>
+    </select>-->
+
+    <!-- 노트 내용 확인 -->
+    <select id="selectOne" parameterType="int" resultType="MyNoteDTO">
+        SELECT *
+        FROM myNote
+        WHERE noteNo=#{noteNo}
+    </select>
+
+    <!-- 노트 패스워드 로그인용 -->
+    <select id="NoteIsExist" parameterType="MyNoteDTO" resultType="int">
+        SELECT COUNT(*)
+        FROM myNote
+        WHERE noteNo=#{noteNO} AND password=#{password}
+    </select>
+
+    <!-- 사용자 + 날짜 지정 노트 글 [삭제] -->
+    <delete id="delete" parameterType="int">
+        DELETE FROM
+            myNote
+        WHERE
+            noteNo=#{noteNo}
+    </delete>
+
+    <!-- 사용자 + 날짜 지정 노트 글 [수정] -->
+    <update id="update" parameterType="MyNoteDTO">
+        UPDATE myNote
+        SET title=#{title},content=#{content},password=#{password}
+        WHERE noteNo=#{noteNo}
+    </update>
+
+
+    <!-- 페이지네이션 -->
+    <select id="getPageList" resultType="MyNoteDTO">
+        SELECT *
+        FROM
+        (SELECT rownum r , f.*
+        FROM
+        (SELECT *
+        FROM MyNote
+        WHERE userNo=#{userNo} <include refid="search"/>
+        ORDER BY noteNo DESC) f)
+        WHERE r BETWEEN #{start} AND #{end}
+    </select>
+
+    <!-- [페이지네이션] 페이지 수를 계산하기 위한 쿼리 -->
+    <select id="count" resultType="int">
+        SELECT COUNT(*)
+        FROM MyNote
+        WHERE noteNo=#{noteNo} <include refid="search"/>
+    </select>
+
+    <!-- [페이지네이션] 페이지 수를 계산하기 위한 쿼리 - userNo -->
+    <select id="countByUserNo" resultType="int">
+        SELECT COUNT(*)
+        FROM MyNote
+        WHERE userNo=#{userNo} <include refid="search"/>
+    </select>
+
+    <!-- 일반 검색 -->
+    <sql id="search">
+        <if test="type != null and type.length > 0">
+            <trim prefix="and">
+                <if	test="type=='title'.toString()"> title like '%' || #{keyword} || '%' </if>
+                <if	test="type=='content'.toString()"> content like '%' || #{keyword} || '%' </if>
+            </trim>
+        </if>
+    </sql>
+</mapper>

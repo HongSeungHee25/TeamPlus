@@ -1,0 +1,176 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layout}">
+
+<th:block layout:fragment="pagetitle">
+	<!--page title-->
+	<div th:replace="partials/title-meta :: title-meta('Create Todo')"></div>
+</th:block>
+
+<head>
+	<!-- Plugins css -->
+	<link href="/assets/libs/dropzone/dropzone.css" rel="stylesheet" type="text/css"/>
+</head>
+
+<body>
+<div layout:fragment="content">
+	<div th:replace="partials/page-title :: page-title('Create Todo','Todo')"></div>
+	<form action="todo-create" method="post" name="todo-create-form">
+		<!-- todo : 유저아이디와 프로젝트 타이틀 사용-->
+		<input name="projectNo" type="hidden" th:value="${projectNo}">
+		<!--<input name="userID" type="hidden" value="">-->
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="card">
+					<div class="card-body">
+						<div class="mb-3">
+							<label class="form-label" for="todo-title-input">제목(Title)</label>
+							<input type="text" class="form-control" id="todo-title-input" name="title"
+								   placeholder="Enter To Do title">
+						</div>
+
+
+						<div class="mb-3">
+							<label class="form-label">내용(Description)</label>
+							<div class="centered">
+								<textarea id="editor" name="description"></textarea>
+							</div>
+						</div>
+					</div>               <!-- end card body -->
+				</div>
+				<!-- end card -->
+
+				<div class="row">
+					<div class="col-md-6">
+						<div class="card">
+							<div class="card-header">
+								<h5 class="card-title mb-0">시작일 (TodoDate)</h5>
+							</div>
+							<div class="card-body">
+								<input type="date" id="startDateInput" name="todoDate" class="choices__inner" onchange="javascript:updateDueDateMin()">
+							</div>
+						</div>
+						<!-- end card -->
+					</div>
+					<div class="col-md-6">
+						<div class="card">
+							<div class="card-header">
+								<h5 class="card-title mb-0">종료 예정일 (DueDate)</h5>
+							</div>
+							<div class="card-body">
+								<input type="date" id="dueDateInput" name="dueDate" class="choices__inner">
+							</div>
+						</div>
+						<!-- end card -->
+					</div>
+					<!-- end col -->
+				</div>
+				<!-- end row -->
+
+				<div class="text-end mb-4">
+					<button type="submit" class="btn btn-success w-sm"
+							data-bs-target="#createProjectSuccess" data-bs-toggle="modal">Create</button>
+				</div>
+			</div>
+			<!-- end col -->
+		</div>
+	</form>
+
+
+</div>
+
+
+
+<div class="modal fade" id="createProjectSuccess" data-bs-backdrop="static"
+	 data-bs-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-body text-center p-5">
+				<div class="mt-4">
+					<h4 class="mb-3" th:text="${title}"></h4>
+					<p class="text-muted mb-4" th:text="${message}"></p>
+					<div class="hstack gap-2 justify-content-center">
+						<a href="javascript:void(0);"
+						   class="btn btn-link link-success fw-medium"
+						   data-bs-dismiss="modal"><i
+								class="ri-close-line me-1 align-middle"></i> 닫기</a>
+						<a href="javascript:void(0);"
+						   class="btn" th:class="${result == 1} ? 'btn-success' : 'btn-danger' ">
+							<span th:text="${title}"></span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<th:block layout:fragment="pagejs">
+	<script>
+		const message = '[[${message}]]';
+		console.log(message);
+		if(message!=''){
+			const modal = new bootstrap.Modal(document.querySelector('#createProjectSuccess'));
+			modal.show();
+		}
+
+		document.addEventListener("DOMContentLoaded", function () {
+			ClassicEditor
+					.create(document.querySelector('#editor'), {
+						// CKEditor 옵션 설정
+					})
+					.then(editor => {
+						window.editor = editor;
+					})
+					.catch(err => {
+						console.error(err.stack);
+					});
+
+			// 폼 제출 이벤트 리스너
+			document.getElementById('editorForm').addEventListener('submit', function (e) {
+				e.preventDefault(); // 폼의 기본 제출 동작을 중지
+
+				// 에디터의 내용을 폼 필드에 설정
+				const contentValue = window.editor.getData();
+				document.querySelector('textarea[name="description"]').value = contentValue;
+
+				// 폼을 서버로 제출
+				this.submit();
+			});
+		});
+	</script>
+	<script type="text/javascript">
+		// 현재 날짜 가져오기
+		const date = new Date();
+
+		const yyyy = date.getFullYear();
+		const mm = String(date.getMonth() + 1).padStart(2, '0');
+		const dd = String(date.getDate()).padStart(2, '0');
+
+		const currentDate = `${yyyy}-${mm}-${dd}`;
+		document.getElementById('startDateInput').value = currentDate;
+		document.getElementById('dueDateInput').value = currentDate;
+		document.getElementById('dueDateInput').min = document.getElementById('startDateInput').value;
+
+		function updateDueDateMin() {
+			const startDateInput = document.getElementById('startDateInput');
+			const dueDateInput = document.getElementById('dueDateInput');
+
+			// 시작일 이후의 날짜를 최소 선택 가능한 날짜로 설정
+			dueDateInput.min = startDateInput.value;
+
+			if(startDateInput.value > dueDateInput.value)
+				dueDateInput.value = startDateInput.value;
+		}
+	</script>
+	<!-- ckeditor -->
+	<script src="/assets/libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js"></script>
+
+	<!-- dropzone js -->
+	<script src="/assets/libs/dropzone/dropzone-min.js"></script>
+	<!-- project-create init -->
+	<script src="/assets/js/pages/project-create.init.js"></script>
+</th:block>
+</body>
+
+</html>

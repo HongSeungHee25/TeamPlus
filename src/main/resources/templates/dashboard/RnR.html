@@ -1,0 +1,424 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}">
+
+<th:block layout:fragment="pagetitle">
+	<!--page title-->
+	<div th:replace="partials/title-meta :: title-meta('R&R')"></div>
+</th:block>
+
+<head>
+	<!-- Dragula css -->
+	<link rel="stylesheet" href="/assets/libs/dragula/dragula.min.css" />
+	<!-- simplebar css -->
+<!--	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/simplebar/5.3.5/simplebar.min.css">-->
+</head>
+
+<body>
+	<div layout:fragment="content">
+		<div th:replace="partials/page-title :: page-title('R&R &nbsp;:&nbsp; Roles & Responsibilities','Projects')"></div>
+		<input type="hidden" id="userNo" th:value="${session.user.userNo}">
+		<input type="hidden" id="projectNo" th:value="${projectNo}">
+		<input type="hidden" id="page" th:value="${page}">
+		<div class="card">
+			<div class="card-body">
+				<div class="row g-2">
+					<div class="col-lg-3 col-auto">
+						<div class="search-box">
+							<input type="text" class="form-control search" id="search-word" placeholder="검색어를 입력하세요" disabled>
+							<i class="ri-search-line search-icon"></i>
+						</div>
+					</div>
+					<div class="col-lg-2" style="width: 160px;">
+						<div class="mb-3">
+							<select id="condition" data-choices data-choices-text-unique-true>
+								<option value="all" selected>전체</option>
+								<option value="title">제목</option>
+								<option value="description">내용</option>
+								<option value="incharge">작성자</option>
+								<option value="imminent">마감 임박</option>
+							</select>
+						</div>
+					</div>
+					<div class="col-lg-auto">
+						<div class="hstack gap-2">
+							<button type="button" id="search" class="btn btn-primary">
+								<i class="ri-search-2-line align-bottom me-1"></i>검색
+							</button>
+						</div>
+					</div>
+					<div class="col-lg-auto" id="searchInfo" style="padding: 10px;">
+
+					</div>
+					<div class="col-lg-auto" style="padding-top: 5px; padding-right: 20px;">
+							<h3 style="margin: 0px;">OR</h3>
+					</div>
+					<div class="col-lg-2" style="width: 210px;">
+						<div class="mb-3">
+							<select id="statusSelect" data-choices data-choices-text-unique-true>
+								<option value="0">Status : 진행중</option>
+								<option value="1">Status : 작업 완료</option>
+								<option value="2">Status : 작업 예정</option>
+								<option value="3" selected>Status : 검토 요청</option>
+								<option value="4">Status : 오류 수정</option>
+							</select>
+						</div>
+					</div>
+					<div class="col-lg-auto">
+						<div class="hstack gap-2">
+							<button type="button" id="statusSearch" class="btn btn-primary">
+								<i class="ri-search-2-line align-bottom me-1"></i>검색
+							</button>
+						</div>
+					</div>
+					<div class="col-auto ms-sm-auto">
+						<div class="avatar-group" id="newMembar">
+							<th:block th:each="member : ${teamList}">
+								<a href="javascript: void(0);" class="avatar-group-item" data-bs-toggle="tooltip"
+							   		data-bs-trigger="hover" data-bs-placement="top" th:title="${member.getNickName()}">
+									<img th:src="${member.getProfileURL()}" class="rounded-circle avatar-xs">
+								</a>
+							</th:block>
+							<a href="#addmemberModal" data-bs-toggle="modal" class="avatar-group-item">
+								<div class="avatar-xs">
+									<div class="avatar-title rounded-circle">
+										+
+									</div>
+								</div>
+							</a>
+						</div>
+					</div>
+					<!--end col-->
+				</div>
+				<!--end row-->
+			</div>
+			<!--end card-body-->
+		</div>
+		<!--end card-->
+
+		<!-- ★ 수정 시작 ★ -->
+		<div class="row">
+			<div class="col-xl-12">
+				<div class="card">
+					<div class="card-header border-0 align-items-center d-flex" style="padding-bottom: 0px;">
+						<h4 class="card-title flex-grow-1 mb-0">R&R List</h4>
+					</div><!-- end cardheader -->
+					<div class="card-body">
+
+							<table class="table table-nowrap table-centered align-middle">
+								<thead class="bg-light text-muted">
+								<tr>
+									<th scope="col">No</th>
+									<th scope="col">Title</th>
+									<th scope="col">Description</th>
+									<th scope="col">Start Date</th>
+									<th scope="col">Due Date</th>
+									<th scope="col">End Date</th>
+									<th scope="col">Incharge</th>
+									<th scope="col">Status</th>
+									<th scope="col">Update</th>
+									<th scope="col">Comments</th>
+								</tr><!-- end tr -->
+								</thead><!-- thead -->
+
+								<!-- 구성 내용은 필요한 데이터에 따라 열 이름 바꿔서 데이터 연동 -->
+								<tbody>
+								<!-- tr 태그 안에 반복문 사용하여 데이터 출력, 반복 시 아래 6개 tr 태그 삭제 -->
+								<th:block th:each="list,status:${todoList}">
+								<tr>
+									<!-- 프로젝트이름(Project Name) -->
+									<td class="fw-medium" th:text="${(page -1)*10+status.count}"></td>	<!-- Todo 번호는 타임리프의 status 나 start,end 사용할 예정 -->
+									<td class="fw-medium" th:text="${list.getTitle()}"></td>	<!-- Todo 몇글자 이상일 경우 ... 으로 표시되도록 설정해야함 10.23 (재민) -->
+									<td class="fw-medium" th:utext="${list.getDescription()}"></td>
+									<td class="fw-medium" th:text="${list.getTodoDate()}"></td>
+									<td class="fw-medium" th:text="${list.getDueDate()}"></td>
+									<td class="fw-medium" th:text="${list.getEndDate()}"></td>
+									<td class="fw-medium">
+										<img class="rounded-circle header-profile-user"
+											 th:src="${userList.get(__${status.count}__ - 1).getProfileURL}" alt="Header Avatar">
+										[[${userList.get(__${status.count}__ - 1).getNickName()}]]
+									</td>
+									<td class="fw-medium">
+										<th:block th:if="${list.getStatus() == 0}">
+											<span class="badge badge-soft-info" th:id="currentStatus+${status.count}">진행중</span>
+										</th:block>
+										<th:block th:if="${list.getStatus() == 1}">
+											<span class="badge badge-soft-success" th:id="currentStatus+${status.count}">작업 완료</span>
+										</th:block>
+										<th:block th:if="${list.getStatus() == 2}">
+											<span class="badge badge-soft-primary" th:id="currentStatus+${status.count}">작업 예정</span>
+										</th:block>
+										<th:block th:if="${list.getStatus() == 3}">
+											<span class="badge badge-soft-warning" th:id="currentStatus+${status.count}">검토 요청</span>
+										</th:block>
+										<th:block th:if="${list.getStatus() == 4}">
+											<span class="badge badge-soft-danger" th:id="currentStatus+${status.count}">오류 수정</span>
+										</th:block>
+									</td>
+									<td class="fw-medium">
+										<div class="avatar-group flex-nowrap" style="width: 50px;">
+											<th:block th:if="${session.user.userNo == list.getUserNo()}">
+												<div class="avatar-group-item">
+													<a th:href="|javascript:changeStatus(1,${status.count},${list.getTodoNo()})|" class="d-inline-block">
+														<img src="/assets/images/status/green.png" class="rounded-circle avatar-xxs">
+													</a>
+												</div>
+												<div class="avatar-group-item">
+													<a th:href="|javascript:changeStatus(4,${status.count},${list.getTodoNo()})|" class="d-inline-block">
+														<img src="/assets/images/status/red.png" class="rounded-circle avatar-xxs">
+													</a>
+												</div>
+												<div class="avatar-group-item">
+													<a th:href="|javascript:changeStatus(2,${status.count},${list.getTodoNo()})|" class="d-inline-block">
+														<img src="/assets/images/status/indigo.png" class="rounded-circle avatar-xxs">
+													</a>
+												</div>
+												<div class="avatar-group-item">
+													<a th:href="|javascript:changeStatus(0,${status.count},${list.getTodoNo()})|" class="d-inline-block">
+														<img src="/assets/images/status/blue.png" class="rounded-circle avatar-xxs">
+													</a>
+												</div>
+												<div class="avatar-group-item">
+													<a th:href="|javascript:changeStatus(3,${status.count},${list.getTodoNo()})|" class="d-inline-block">
+														<img src="/assets/images/status/yellow.png" class="rounded-circle avatar-xxs">
+													</a>
+												</div>
+												<div th:id="success+${status.count}" style="margin-left: 10px;">
+												</div>
+											</th:block>
+
+											<th:block th:if="${session.user.userNo != list.getUserNo()}">
+												<div class="avatar-group-item">
+													<a class="d-inline-block">
+														<img src="/assets/images/status/pastelgreen.png" class="rounded-circle avatar-xxs gu-unselectable">
+													</a>
+												</div>
+												<div class="avatar-group-item">
+													<a class="d-inline-block">
+														<img src="/assets/images/status/pastelred.png" class="rounded-circle avatar-xxs gu-unselectable">
+													</a>
+												</div>
+												<div class="avatar-group-item">
+													<a class="d-inline-block">
+														<img src="/assets/images/status/pastelindigo.png" class="rounded-circle avatar-xxs gu-unselectable">
+													</a>
+												</div>
+												<div class="avatar-group-item">
+													<a class="d-inline-block">
+														<img src="/assets/images/status/pastelblue.png" class="rounded-circle avatar-xxs gu-unselectable">
+													</a>
+												</div>
+												<div class="avatar-group-item">
+													<a class="d-inline-block">
+														<img src="/assets/images/status/pastelyellow.png" class="rounded-circle avatar-xxs gu-unselectable">
+													</a>
+												</div>
+											</th:block>
+										</div>
+									</td>
+									<td class="fw-medium">
+										<ul class="pagination pagination-separated pagination-sm mb-0">
+											<li class="page-item">
+												<a th:href="|javascript:comments(${status.count},${list.getTodoNo()})|" class="page-link" th:id="comments+${status.count}">
+													댓글
+												</a>
+											</li>
+										</ul>
+									</td>
+								</tr>
+								</th:block>
+								</tbody>
+							</table>
+						<div id="mainDiv">
+							<ul class="pagination pagination-wrap pagination-sm mb-0" id="main">
+								<li class="page-item" style="margin-right: auto"> ※ 전체 글 개수 : [[${ paging.totalCount }]] </li>
+								<th:block th:with="start=${paging.startPage},last=${paging.endPage}" id="pagination">
+									<!-- 이전 글 버튼 -->
+									<th:block th:if="${paging.startPage == 1}">
+										<!-- 페이지 시작 번호가 1인 경우 -->
+										<li class="page-item disabled">
+											<a th:href="@{RnR(projectNo=${projectNo},page=1)}" th:data-num="1" class="page-link" style="background-color: #EFEFEF"><<</a>
+										</li>
+										<span th:if="${page == 1}">
+														<li class="page-item disabled">
+															<a th:href="@{RnR(projectNo=${projectNo},page=${page -1})}" th:data-num="${page -1}" class="page-link" style="background-color: #EFEFEF"><</a>
+														</li>
+													</span>
+										<span th:if="${page != 1}">
+														<li class="page-item">
+															<a th:href="@{RnR(projectNo=${projectNo},page=${page -1})}" th:data-num="${page -1}" class="page-link"><</a>
+														</li>
+													</span>
+									</th:block>
+									<th:block th:if="${paging.startPage != 1}">
+										<!-- 페이지 시작 번호가 1이 아닐 경우 -->
+										<li class="page-item">
+											<a th:href="@{RnR(projectNo=${projectNo},page=1)}" th:data-num="1" class="page-link"><<</a>
+										</li>
+										<li class="page-item">
+											<a th:href="@{RnR(projectNo=${projectNo},page=${page -1})}" th:data-num="${page -1}" class="page-link"><</a>
+										</li>
+									</th:block>
+
+									<!-- 페이지 번호 -->
+									<th:block th:each="i:${#numbers.sequence(start,last)}">
+										<li class="page-item">
+											<a th:href="@{RnR(projectNo=${projectNo},page=${i})}"
+											   th:text="${i}" th:data-num="${i}"
+											   th:class="${i==page}?'page-link active':'page-link'"></a>
+										</li>
+									</th:block>
+
+									<!-- 다음 글 버튼 -->
+									<th:block th:if="${paging.endPage == paging.totalPage}">
+										<!-- 현재 페이지가 마지막 페이지인 경우 -->
+										<span th:if="${page == paging.totalPage}">
+														<li class="page-item disabled">
+															<a th:href="@{RnR(projectNo=${projectNo},page=${page +1})}" th:data-num="${page +1}" class="page-link" style="background-color: #EFEFEF">></a>
+														</li>
+													</span>
+										<span th:if="${page != paging.totalPage}">
+														<li class="page-item">
+															<a th:href="@{RnR(projectNo=${projectNo},page=${page +1})}" th:data-num="${page +1}" class="page-link">></a>
+														</li>
+													</span>
+										<li class="page-item disabled">
+											<a th:href="@{RnR(projectNo=${projectNo},page=${paging.totalPage})}" th:data-num="${paging.totalPage}" class="page-link" style="background-color: #EFEFEF">>></a>
+										</li>
+									</th:block>
+									<th:block th:if="${paging.endPage != paging.totalPage}">
+										<!-- 현재 페이지가 마지막 페이지가 아닌 경우 -->
+										<li class="page-item">
+											<a th:href="@{RnR(projectNo=${projectNo},page=${page +1})}" th:data-num="${page +1}" class="page-link">></a>
+										</li>
+										<li class="page-item">
+											<a th:href="@{RnR(projectNo=${projectNo},page=${paging.totalPage})}" th:data-num="${paging.totalPage}" class="page-link">>></a>
+										</li>
+									</th:block>
+								</th:block>
+							</ul>
+					</div><!-- end card body -->
+				</div><!-- end card -->
+			</div><!-- end col -->
+		</div><!-- end row -->
+		<!-- ★ 수정 종료 ★ -->
+
+		<div class="modal fade" id="addmemberModal" tabindex="-1.5" aria-labelledby="addmemberModalLabel" aria-hidden="true"
+			style="position: absolute; top: 50px; left: 0;">
+			<div class="modal-dialog">
+				<div class="modal-content border-0">
+					<div class="modal-header p-3 bg-soft-warning">
+						<h5 class="modal-title" id="addmemberModalLabel">Add Member</h5>
+						<button type="button" class="btn-close" id="btn-close-member" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div style="text-align: center; margin-bottom: 20px;">
+							<img src="/assets/images/util/invite.png" width="100px;" id="image">
+						</div>
+						<h3 style="text-align: center; font-weight: bold;" id="text1">초대할 회원의 이메일을 입력해주세요!</h3>
+						<h5 style="text-align: center; margin-bottom: 20px;" id="text2">입력한 회원의 이메일로 초대코드와 비밀번호가 전송됩니다.</h5>
+						<div class="row g-3" id="inputDiv">
+							<div class="col-lg-12">
+								<label for="email">e-mail</label>
+								<input type="text" class="form-control" id="email" placeholder="이메일을 입력해주세요">
+							</div>
+							<!--end col-->
+						</div>
+						<!--end row-->
+					</div>
+					<div class="modal-footer" id="buttonDiv">
+						<button type="button" class="btn btn-light" data-bs-dismiss="modal"><i
+								class="ri-close-line align-bottom me-1"></i> 닫기</button>
+						<button type="button" class="btn btn-success" id="invite">초대</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--end add member modal-->
+
+		<div class="modal fade zoomIn" id="deleteRecordModal" tabindex="-1" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+							id="delete-btn-close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mt-2 text-center">
+							<lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop"
+								colors="primary:#f7b84b,secondary:#f06548" style="width:100px;height:100px"></lord-icon>
+							<div class="mt-4 pt-2 fs-15 mx-4 mx-sm-5">
+								<h4>Are you sure ?</h4>
+								<p class="text-muted mx-4 mb-0">Are you sure you want to remove this tasks ?</p>
+							</div>
+						</div>
+						<div class="d-flex gap-2 justify-content-center mt-4 mb-2">
+							<button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
+							<button type="button" class="btn w-sm btn-danger" id="delete-record">Yes, Delete
+								It!</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--end modal -->
+	</div>
+	</div>
+
+	<th:block layout:fragment="modal">
+
+	</th:block>
+
+	<th:block layout:fragment="pagejs">
+		<script type="text/javascript">
+
+			//[작성자] 선택시 경고문 입력 함수 + [전체] 선택시 input 초기화 및 disabled
+			const searchInfo = document.getElementById('searchInfo');
+			const span = document.createElement('span');
+			const searchInput = document.getElementById('search-word');
+			span.style.color = 'red';
+
+
+			document.querySelector('#condition').addEventListener('change', (e) => {
+				console.log(e.target.value)
+				if(e.target.value == 'incharge') {
+					span.textContent = '※ 작성자 [닉네임]을 정확하게 입력하세요.';
+					searchInfo.appendChild(span)
+				} else
+					span.textContent = '';
+
+				if(e.target.value == 'all' || e.target.value == 'imminent') {
+					searchInput.value = '';
+					searchInput.disabled =  true;
+				} else
+					searchInput.disabled =  false;
+
+			});
+		</script>
+
+		<!-- Dashboard init -->
+		<script src="/assets/js/pages/dashboard-projects.init.js"></script>
+
+		<!-- RnR Custom js -->
+		<script type="text/javascript" src="/js/RnR.js"></script>
+
+		<!-- dragula init js -->
+		<script src="/assets/libs/dragula/dragula.min.js"></script>
+
+		<!-- dom autoscroll -->
+		<script src="/assets/libs/dom-autoscroller/dom-autoscroller.min.js"></script>
+
+		<!--taks-kanban-->
+		<script src="/assets/js/pages/tasks-kanban.init.js"></script>
+
+		<!-- profile-setting init js -->
+		<script src="/assets/js/pages/profile-setting.init.js"></script>
+		<script src="/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
+
+		<!-- simplebar js -->
+<!--		<script src="https://cdnjs.cloudflare.com/ajax/libs/simplebar/5.3.5/simplebar.min.js"></script>-->
+	</th:block>
+</body>
+
+</html>

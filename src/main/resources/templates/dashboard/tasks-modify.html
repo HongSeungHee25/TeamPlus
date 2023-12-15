@@ -1,0 +1,149 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{profile-layout}">
+
+<th:block layout:fragment="pagetitle">
+	<!--page title-->
+	<div th:replace="partials/title-meta :: title-meta('Create Project')"></div>
+</th:block>
+
+<head>
+	<!-- Plugins css -->
+	<link href="/assets/libs/dropzone/dropzone.css" rel="stylesheet" type="text/css" />
+	<script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+</head>
+
+<body>
+<div layout:fragment="content">
+	<div th:replace="partials/page-title :: page-title('Create Memo','Memo')"></div>
+<form action="/private/modifysave" method="post">
+	<input type="hidden" value="test1" name="userNo">
+	<input type="hidden" name="noteNo" th:value="${vo.noteNo}">
+	<div class="row">
+		<div class="col-lg-8">
+			<div class="card">
+				<div class="card-body">
+					<div class="mb-3">
+						<label class="form-label" for="project-title-input">개인 메모</label>
+						<input type="text" class="form-control" id="project-title-input" name="title"
+							  th:value="${vo.title}">
+					</div>
+
+
+					<div class="mb-3">
+						<label class="form-label">메모</label>
+						<div class="centered">
+							<textarea id="editor" name="content" th:utext="${vo.content}"></textarea>
+						</div>
+					</div>
+				</div>
+				<!-- end card body -->
+			</div>
+			<!-- end card -->
+
+			<div class="card">
+				<div class="card-header">
+					<h5 class="card-title mb-0">메모 비밀번호 (Password)</h5>
+				</div>
+				<div class="card-body">
+					<input type="password" name="password" class="form-control"
+						   th:value="${vo.password}">
+				</div>
+			</div>
+			<!-- end card -->
+
+			<div class="text-end mb-4">
+				<button type="submit" class="btn btn-danger w-sm">Delete</button>
+<!--                    <button type="submit" class="btn btn-secondary w-sm">Draft</button>&ndash;&gt;-->
+				<button type="submit" class="btn btn-success w-sm">Create</button>
+			</div>
+		</div>
+		<!-- end col -->
+		<div class="col-lg-4">
+			<div class="card">
+				<div class="card-header">
+					<h5 class="card-title mb-0">Date</h5>
+				</div>
+				<div class="card-body">
+					<div>
+						<label for="choices-date" class="form-label">Date</label>
+						<div><input name="noteDate" id="choices-date" type="date" class="choices__inner" style="padding-right: 8px;" th:value="${vo.noteDate}" disabled>
+						</div>
+					</div>
+				</div>
+				<!-- end card body -->
+			</div>
+			<div class="card">
+				<div class="card-header">
+					<h5 class="card-title mb-0">Privacy</h5>
+				</div>
+				<div class="card-body">
+					<div>
+						<label for="choices-privacy-status-input" class="form-label">Status</label>
+						<select class="form-select" data-choices data-choices-search-false
+								id="choices-privacy-status-input">
+							<option value="비공개" selected disabled>[[${vo.isPrivate}]]</option>
+						</select>
+					</div>
+				</div>
+				<!-- end card body -->
+			</div>
+			<!-- end card -->
+		</div>
+		<!-- end col -->
+		</div>
+</form>
+	</div>
+</div>
+
+
+<th:block layout:fragment="modal">
+
+</th:block>
+
+<th:block layout:fragment="pagejs">
+
+	<!-- ckeditor -->
+	<script src="/assets/libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js"></script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			ClassicEditor
+					.create(document.querySelector('#editor'), {
+						// CKEditor 옵션 설정
+					})
+					.then(editor => {
+						window.editor = editor;
+					})
+					.catch(err => {
+						console.error(err.stack);
+					});
+
+			// 폼 제출 이벤트 리스너
+			document.getElementById('editorForm').addEventListener('submit', function (e) {
+				e.preventDefault(); // 폼의 기본 제출 동작을 중지합니다.
+
+				// 에디터의 내용을 폼 필드에 설정
+				const contentValue = window.editor.getData();
+				document.querySelector('textarea[name="content"]').value = contentValue;
+
+				// 폼을 서버로 제출
+				this.submit();
+			});
+		});
+	</script>
+
+	<!-- dropzone js -->
+	<script src="/assets/libs/dropzone/dropzone-min.js"></script>
+	<!-- project-create init -->
+<!--	<script src="/assets/js/pages/project-create.init.js"></script>-->
+	<!-- calendar min js -->
+	<script src="/assets/libs/fullcalendar/main.min.js"></script>
+
+	<!-- Calendar init -->
+	<script src="/assets/js/pages/calendar.init.js"></script>
+
+</th:block>
+</body>
+
+</html>

@@ -1,0 +1,190 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	  layout:decorate="~{layout}">
+
+<th:block layout:fragment="pagetitle">
+	<!--page title-->
+	<div th:replace="partials/title-meta :: title-meta('Modify Project')"></div>
+</th:block>
+
+<head>
+	<!-- Plugins css -->
+	<link href="/assets/libs/dropzone/dropzone.css" rel="stylesheet" type="text/css"/>
+</head>
+
+<body>
+<div layout:fragment="content">
+	<div th:replace="partials/page-title :: page-title('Modify Project','Projects')"></div>
+	<form action="modify" method="post">
+		<input type="hidden" id="projectNo" name="projectNo" th:value="${projectNo}">
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title mb-0">공개범위_미정(Privacy)</h5>
+					</div>
+					<div class="card-body">
+						<div>
+							<label for="choices-privacy-status-input" class="form-label">Status</label>
+								<select class="form-select" data-choices data-choices-search-false
+										id="choices-privacy-status-input" name="status">
+									<th:block th:if="${project.getStatus() == 0}">
+										<option value="0" selected>진행중</option>
+										<option value="1">종료</option>
+									</th:block>
+									<th:block th:if="${project.getStatus() == 1}">
+										<option value="0">진행중</option>
+										<option value="1" selected>종료</option>
+									</th:block>
+								</select>
+						</div>
+					</div>
+					<!-- end card body -->
+				</div>
+				<!-- end card -->
+
+				<div class="card">
+					<div class="card-body">
+						<div class="mb-3">
+							<label class="form-label" for="project-title-input">프로젝트명(Project Title)</label>
+							<input type="text" class="form-control" id="project-title-input" name="title" th:value="${project.getTitle()}">
+						</div>
+
+
+						<div class="mb-3">
+							<label class="form-label">프로젝트 설명(Project Description)</label>
+							<div class="centered">
+								<textarea id="editor" name="description" th:utext="${project.getDescription()}"></textarea>
+							</div>
+						</div>
+					</div>
+					<!-- end card body -->
+				</div>
+				<!-- end card -->
+
+				<div class="row">
+					<div class="col-md-6">
+						<div class="card">
+							<div class="card-header">
+								<h5 class="card-title mb-0">프로젝트 시작 예정일 (startDate)</h5>
+							</div>
+							<div class="card-body">
+								<input type="date" id="startDateInput" name="startDate" class="choices__inner" th:value="${project.getStartDate()}" onchange="javascript:updateDueDateMin()">
+							</div>
+						</div>
+						<!-- end card -->
+					</div>
+					<div class="col-md-6">
+						<div class="card">
+							<div class="card-header">
+								<h5 class="card-title mb-0">프로젝트 종료 예정일 (DueDate)</h5>
+							</div>
+							<div class="card-body">
+								<input type="date" id="dueDateInput" name="dueDate" class="choices__inner" th:value="${project.getDueDate()}" th:min="${project.getStartDate()}">
+							</div>
+						</div>
+						<!-- end card -->
+					</div>
+					<!-- end col -->
+				</div>
+				<!-- end row -->
+
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title mb-0">프로젝트 비밀번호 (Password)</h5>
+					</div>
+					<div class="position-relative auth-pass-inputgroup mb-3">
+						<input type="password" class="form-control pe-3 password-input"
+							   th:value="${project.getPassword()}" id="password-input" name="password">
+						<button
+								class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
+								type="button" id="password-addon"><i
+								class="ri-eye-fill align-middle"></i></button>
+					</div>
+				</div>
+				<!-- end card -->
+
+				<div class="text-end mb-4">
+					<!--<button type="submit" class="btn btn-danger w-sm">Delete</button>
+                        <button type="submit" class="btn btn-secondary w-sm">Draft</button>-->
+					<th:block th:if="${isLeader == 0}">
+						<a style="color: red; font-weight: bold; margin-right: 20px;">※ 프로젝트 정보 수정은 팀장만 가능합니다.</a>
+						<button type="submit" class="btn btn-success w-sm" disabled>Update</button>
+					</th:block>
+					<th:block th:if="${isLeader == 1}">
+						<button type="submit" class="btn btn-success w-sm">Update</button>
+					</th:block>
+				</div>
+			</div>
+			<!-- end col -->
+		</div>
+	</form>
+</div>
+
+<th:block layout:fragment="modal">
+	<script layout:fragment="script" th:inline="javascript">
+		// 애트리뷰트 result 를 받아서 js 객체 result에 저장
+		const result=[[${result}]]
+		// modal객체 생성
+		const modal = new bootstrap.Modal(document.querySelector(".modal"))
+		// result가 있으면
+		if(result) {
+			// id가 messege인 요소의 내부값을 result로 설정
+			document.querySelector('#message').innerHTML=result;
+			// 모달을 화면에 출력
+			modal.show();
+		}
+	</script>
+</th:block>
+
+<th:block layout:fragment="pagejs">
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			ClassicEditor
+					.create(document.querySelector('#editor'), {
+						// CKEditor 옵션 설정
+					})
+					.then(editor => {
+						window.editor = editor;
+					})
+					.catch(err => {
+						console.error(err.stack);
+					});
+
+			// 폼 제출 이벤트 리스너
+			document.getElementById('editorForm').addEventListener('submit', function (e) {
+				e.preventDefault(); // 폼의 기본 제출 동작을 중지
+
+				// 에디터의 내용을 폼 필드에 설정
+				const contentValue = window.editor.getData();
+				document.querySelector('textarea[name="description"]').value = contentValue;
+
+				// 폼을 서버로 제출
+				this.submit();
+			});
+		});
+	</script>
+	<script type="text/javascript">
+		function updateDueDateMin() {
+			const startDateInput = document.getElementById('startDateInput');
+			const dueDateInput = document.getElementById('dueDateInput');
+
+			// 시작일 이후의 날짜를 최소 선택 가능한 날짜로 설정
+			dueDateInput.min = startDateInput.value;
+			
+			if(startDateInput.value > dueDateInput.value)
+				dueDateInput.value = startDateInput.value;
+		}
+	</script>
+
+	<!-- ckeditor -->
+	<script src="/assets/libs/@ckeditor/ckeditor5-build-classic/build/ckeditor.js"></script>
+
+	<!-- dropzone js -->
+	<script src="/assets/libs/dropzone/dropzone-min.js"></script>
+	<!-- project-create init -->
+	<script src="/assets/js/pages/project-create.init.js"></script>
+</th:block>
+</body>
+
+</html>
