@@ -9,11 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.teamplus.mvc.dto.UsersDTO;
 import org.teamplus.mvc.service.UsersService;
 import org.teamplus.mvc.util.MailCheck;
 
 import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -142,4 +145,17 @@ public class ApiController {
             return "/";
         }
     }
+    /*// 회원가입
+    @GetMapping("/signup")
+    public String signupView() { return "MyPage/signup"; }*/
+
+    /*// 회원가입 (정보 insert)
+    @PostMapping("/signup")
+    public Map<String, Integer> signup(@RequestBody @Valid UsersDTO dto,RedirectAttributes redirectAttributes){
+        int conut = service.signUp(dto);
+        Map<String, Integer> resultMap = new HashMap<>();		//처리 결과를 응답하기 위한 Map
+        resultMap.put("count",conut);
+        redirectAttributes.addFlashAttribute("signup",1);
+        return resultMap;
+    }*/
 }

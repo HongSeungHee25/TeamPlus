@@ -36,8 +36,8 @@
     <!-- 유저 [회원가입] -->
     <insert id="signUp">
         insert
-        into Users(userno,id,password,name,email,nickname,job)
-        values(userno_seq.nextval,#{id},#{password},#{name},#{email},#{nickName},#{job})
+        into Users(userno,id,password,name,email,nickname,job,profileURL)
+        values(userno_seq.nextval,#{id},#{password},#{name},#{email},#{nickName},#{job},#{profileURL})
     </insert>
 
 

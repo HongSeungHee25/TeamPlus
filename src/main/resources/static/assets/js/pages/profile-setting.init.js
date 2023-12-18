@@ -193,7 +193,7 @@ const imageList = document.getElementById('image-list');
 console.log(imageList)
 
 // 프로필 이미지 경로 확인
-const profileImage = document.getElementById('profileURLInput');
+const profileImage = document.getElementById('profileURL');
 console.log(profileImage)
 if (profileImage) {
     const profileURL = profileImage.getAttribute('src');
@@ -232,7 +232,7 @@ imagePaths.forEach((imagePath, index) => {
         // 선택한 이미지의 경로를 가져와서 <img> 요소에 설정
         selectedImagePath = imageElement.src;
 
-        const profileImage = document.getElementById('profileURLInput');
+        const profileImage = document.getElementById('profileURL');
         profileImage.src = selectedImagePath;
     });
 
@@ -241,25 +241,25 @@ imagePaths.forEach((imagePath, index) => {
 
 const confirmSelectionButton = document.getElementById('confirmSelection');
 confirmSelectionButton.addEventListener('click', () => {
-    const profileURLInput = document.getElementById('profile-img-file-input');
+    const profileURL = document.getElementById('profile-img-file-input');
 
     if (selectedImage) {
         // 이미지가 선택된 경우
         selectedImagePath = selectedImagePath.replace('http://localhost:8086', '');
-        profileURLInput.value = selectedImagePath;
+        profileURL.value = selectedImagePath;
     }
 
     // 추가: 이미지를 클릭하지 않았을 때 기본 이미지로 설정
     if (!selectedImage) {
         selectedImagePath = defaultImagePath;
-        const profileImage = document.getElementById('profileURLInput');
+        const profileImage = document.getElementById('profileURL');
         profileImage.src = selectedImagePath;
 
-        const profileURLInput = document.getElementById('profile-img-file-input');
-        profileURLInput.value = selectedImagePath;
+        profileURL = document.getElementById('profile-img-file-input');
+        profileURL.value = selectedImagePath;
     }
     // 이미지 경로 확인
-    console.log(profileURLInput.value);
+    console.log(profileURL.value);
 
     const modifyProfileImageModal = new bootstrap.Modal(document.getElementById('modifyProfileImage'));
     modifyProfileImageModal.hide();
@@ -582,3 +582,46 @@ function signup() {
     var requestBody = JSON.stringify({ "newnick": newnick });
     xhr.send(requestBody);
 }
+
+const save = function (){
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', '/api/signup');
+
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    const id = document.querySelector('#id').value;
+    const name = document.querySelector('#name').value;
+    const NickName = document.querySelector('#lastnameInput').value;
+    const password = document.querySelector('#password-input').value;
+    const email = document.querySelector('#useremail').value;
+    const job = document.querySelector('#skillsInput').value;
+    const profileURL = document.querySelector('#profile-img-file-input').value;
+
+    const userData = {
+        id: id,
+        password: password,
+        name: name,
+        email: email,
+        nickName: NickName,
+        job: job,
+        profileURL: profileURL
+    };
+
+    const jsonData = JSON.stringify(userData);
+
+    xhr.send(jsonData);
+
+    xhr.onload = function () {
+        const resultObj = JSON.parse(xhr.response);
+        if (xhr.status === 200 || xhr.status === 201) {
+            if(resultObj.count == 1){
+                console.log('회원가입 성공')
+            }
+        } else {
+            console.error('오류1', xhr.status);
+            console.error('오류2', xhr.response);
+            const values=Object.values(resultObj);      //자바스크립트 객체는 key,value 구성 그 중에 value 만 가져와서 배열로 만듭니다.
+            console.log('오류 메시지 : ',values)
+        }
+    };
+}
+document.querySelector('#save').addEventListener('click', save);
